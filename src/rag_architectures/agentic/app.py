@@ -39,8 +39,7 @@ def run_agentic_rag(query: str):
     def generate(state):
         response = llm.invoke([
             HumanMessage(content=f"Context: {state['context']}\n\nQuestion: {state['query']}")
-        ])
-        tracker.update_from_llm_response(response)
+        ], config={"callbacks": [tracker.callback]})
         return {"messages": [response]}
     
     workflow.add_node("retrieve", retrieve)
@@ -52,9 +51,10 @@ def run_agentic_rag(query: str):
     app = workflow.compile()
     
     with console.status("[bold green]Agentic processing..."):
-        result = app.invoke({"query": query, "messages": []})
+        result = app.invoke({"query": query, "messages": []}, config={"callbacks": [tracker.callback]})
     
     tracker.process_time = time.time() - start_time
+    tracker.update_from_response()
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['messages'][-1].content}")

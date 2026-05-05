@@ -1,6 +1,6 @@
 from langchain_community.vectorstores import Chroma
 from langchain_classic.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain_core.prompts import PromptTemplate
 from rich.console import Console
 from utils.config import get_llm, get_embeddings
 from utils.tracking import TokenTracker
@@ -40,10 +40,10 @@ def run_contextual_rag(query: str):
     )
     
     with console.status("[bold green]Processing with context..."):
-        result = qa_chain.invoke(query)
+        result = qa_chain.invoke(query, config={"callbacks": [tracker.callback]})
     
     tracker.process_time = time.time() - start_time
-    tracker.update_from_llm_response(result)
+    tracker.update_from_response()
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['result']}")

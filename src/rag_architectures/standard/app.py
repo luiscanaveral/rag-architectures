@@ -1,6 +1,6 @@
 from langchain_community.vectorstores import Chroma
 from langchain_classic.chains import RetrievalQA
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from rich.console import Console
 from utils.config import get_llm, get_embeddings
@@ -25,10 +25,10 @@ def run_standard_rag(query: str, k: int = 4):
     qa_chain = RetrievalQA.from_chain_type(llm, retriever=retriever, return_source_documents=True)
     
     with console.status("[bold green]Processing..."):
-        result = qa_chain.invoke(query)
+        result = qa_chain.invoke(query, config={"callbacks": [tracker.callback]})
     
     tracker.process_time = time.time() - start_time
-    tracker.update_from_llm_response(result)
+    tracker.update_from_response()
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['result']}")

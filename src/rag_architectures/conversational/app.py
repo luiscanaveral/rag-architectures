@@ -29,6 +29,12 @@ def run_conversational_rag(query: str):
         ("human", "{input}"),
     ])
     
+    # Add context variable to prompt
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are a helpful assistant. Use the context to answer questions.\nContext: {context}"),
+        ("human", "{input}"),
+    ])
+    
     document_chain = create_stuff_documents_chain(llm, prompt)
     retrieval_chain = create_retrieval_chain(retriever, document_chain)
     
@@ -43,11 +49,11 @@ def run_conversational_rag(query: str):
     with console.status("[bold green]Processing..."):
         result = chain_with_history.invoke(
             {"input": query},
-            config={"configurable": {"session_id": "default"}}
+            config={"configurable": {"session_id": "default"}, "callbacks": [tracker.callback]}
         )
     
     tracker.process_time = time.time() - start_time
-    tracker.update_from_llm_response(result)
+    tracker.update_from_response()
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['answer']}")

@@ -28,10 +28,10 @@ def run_graph_rag(query: str):
     )
     
     with console.status("[bold green]Graph RAG processing..."):
-        result = qa_chain.invoke(query)
+        result = qa_chain.invoke(query, config={"callbacks": [tracker.callback]})
     
     tracker.process_time = time.time() - start_time
-    tracker.update_from_llm_response(result)
+    tracker.update_from_response()
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['result']}")
