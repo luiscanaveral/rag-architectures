@@ -18,8 +18,32 @@ A Proof of Concept implementing 8 RAG (Retrieval-Augmented Generation) architect
 - Python >= 3.9
 - [Task](https://taskfile.dev/) (task runner)
 - Docker (for external dependencies)
-- OpenAI API key
+- **Either:**
+  - OpenAI API key, OR
+  - [Ollama](https://ollama.com/) installed locally
 - LangSmith API key (optional, for tracing)
+
+## Switching LLM Providers
+
+Edit `.env` to switch between OpenAI and Ollama:
+
+```bash
+# Use OpenAI
+LLM_PROVIDER=openai
+LLM_MODEL=gpt-3.5-turbo
+OPENAI_API_KEY=your_key
+
+# Use Ollama (local)
+LLM_PROVIDER=ollama
+OLLAMA_MODEL=llama3.2
+OLLAMA_BASE_URL=http://localhost:11434
+```
+
+Start Ollama:
+```bash
+ollama serve
+ollama pull llama3.2
+```
 
 ## Dependencies
 

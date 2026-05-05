@@ -25,7 +25,7 @@ tasks:
   ingest:
     desc: Ingest documents from data folder
     cmds:
-      - '{{.PYTHON}} src/ingestion/ingest.py'
+      - '{{.PYTHON}} -m src.ingestion.ingest'
 
   run:
     desc: Run a specific RAG architecture
@@ -44,7 +44,7 @@ tasks:
   docker:
     desc: Start external dependencies
     cmds:
-      - docker-compose up -d
+      - docker compose up -d
 
   clean:
     desc: Clean generated files

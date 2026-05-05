@@ -1,10 +1,10 @@
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain.retrievers import EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
-from langchain.chains import RetrievalQA
+from langchain_classic.chains import RetrievalQA
 from rich.console import Console
+from src.utils.config import get_llm, get_embeddings
 from dotenv import load_dotenv
 import os
 
@@ -12,7 +12,7 @@ load_dotenv()
 console = Console()
 
 def run_fusion_rag(query: str):
-    embeddings = OpenAIEmbeddings()
+    embeddings = get_embeddings()
     vectordb = Chroma(persist_directory=os.getenv("VECTOR_STORE_PATH"), embedding_function=embeddings)
     
     # Vector retriever
