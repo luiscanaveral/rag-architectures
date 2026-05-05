@@ -3,13 +3,18 @@ from langchain_classic.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from rich.console import Console
 from src.utils.config import get_llm, get_embeddings
+from src.utils.tracking import TokenTracker
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 console = Console()
 
 def run_contextual_rag(query: str):
+    tracker = TokenTracker()
+    start_time = time.time()
+    
     embeddings = get_embeddings()
     vectordb = Chroma(persist_directory=os.getenv("VECTOR_STORE_PATH"), embedding_function=embeddings)
     retriever = vectordb.as_retriever(search_kwargs={"k": 4})
@@ -37,8 +42,17 @@ def run_contextual_rag(query: str):
     with console.status("[bold green]Processing with context..."):
         result = qa_chain.invoke(query)
     
+    tracker.process_time = time.time() - start_time
+    tracker.update_from_llm_response(result)
+    
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['result']}")
+    tracker.log()
+    
+    return {
+        "answer": result['result'],
+        "metadata": tracker.get_metadata()
+    }
 
 if __name__ == "__main__":
     run_contextual_rag("Explain contextual RAG")

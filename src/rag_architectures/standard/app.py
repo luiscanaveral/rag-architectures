@@ -4,13 +4,18 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from rich.console import Console
 from src.utils.config import get_llm, get_embeddings
+from src.utils.tracking import TokenTracker
 from dotenv import load_dotenv
 import os
+import time
 
 load_dotenv()
 console = Console()
 
 def run_standard_rag(query: str, k: int = 4):
+    tracker = TokenTracker()
+    start_time = time.time()
+    
     embeddings = get_embeddings()
     vectordb = Chroma(persist_directory=os.getenv("VECTOR_STORE_PATH"), embedding_function=embeddings)
     
@@ -22,11 +27,20 @@ def run_standard_rag(query: str, k: int = 4):
     with console.status("[bold green]Processing..."):
         result = qa_chain.invoke(query)
     
+    tracker.process_time = time.time() - start_time
+    tracker.update_from_llm_response(result)
+    
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['result']}")
     console.print("\n[bold yellow]Sources:[/bold yellow]")
     for doc in result['source_documents']:
         console.print(f"  - {doc.page_content[:100]}...")
+    tracker.log()
+    
+    return {
+        "answer": result['result'],
+        "metadata": tracker.get_metadata()
+    }
 
 if __name__ == "__main__":
     run_standard_rag("Explain standard RAG architecture")

@@ -56,3 +56,18 @@ tasks:
     desc: Run tests
     cmds:
       - '{{.PYTHON}} -m pytest tests/ -v'
+
+  query-users:
+    desc: Select all users from the database
+    cmds:
+      - '{{.PYTHON}} src/db/query.py users'
+
+  query-orders:
+    desc: Select all orders ordered by id
+    cmds:
+      - '{{.PYTHON}} src/db/query.py orders'
+
+  query-all:
+    desc: Run both users and orders queries
+    cmds:
+      - '{{.PYTHON}} src/db/query.py all'
