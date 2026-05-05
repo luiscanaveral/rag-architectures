@@ -25,7 +25,7 @@ tasks:
   ingest:
     desc: Ingest documents from data folder
     cmds:
-      - '{{.PYTHON}} -m src.ingestion.ingest'
+      - '{{.PYTHON}} -m ingestion.ingest'
 
   run:
     desc: Run a specific RAG architecture
@@ -40,22 +40,6 @@ tasks:
       - '{{.VENV}}/bin/streamlit run tests/{{.APP}}.py'
     requires:
       vars: [APP]
-
-  docker:
-    desc: Start external dependencies
-    cmds:
-      - docker compose up -d
-
-  clean:
-    desc: Clean generated files
-    cmds:
-      - rm -rf {{.VENV}} vectorstore __pycache__ .pytest_cache
-      - find . -type f -name '*.pyc' -delete
-
-  test:
-    desc: Run tests
-    cmds:
-      - '{{.PYTHON}} -m pytest tests/ -v'
 
   query-users:
     desc: Select all users from the database

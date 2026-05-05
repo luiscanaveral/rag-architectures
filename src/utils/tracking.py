@@ -1,6 +1,6 @@
 import time
 from functools import wraps
-from src.utils.logging import info, debug
+from utils.logging import info, debug
 
 class TokenTracker:
     def __init__(self):

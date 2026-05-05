@@ -2,7 +2,7 @@ from docling.document_converter import DocumentConverter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from src.utils.config import get_embeddings
+from utils.config import get_embeddings
 from dotenv import load_dotenv
 import os
 from pathlib import Path

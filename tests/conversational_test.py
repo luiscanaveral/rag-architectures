@@ -3,7 +3,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
-from src.rag_architectures.conversational.app import run_conversational_rag
+from rag_architectures.conversational.app import run_conversational_rag
 
 st.title("Conversational RAG Test")
 if "messages" not in st.session_state:

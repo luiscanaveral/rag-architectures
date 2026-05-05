@@ -3,8 +3,8 @@ from langgraph.graph import StateGraph, END
 from typing import TypedDict, Annotated, Sequence
 from langchain_core.messages import HumanMessage, AIMessage
 from rich.console import Console
-from src.utils.config import get_llm, get_embeddings
-from src.utils.tracking import TokenTracker
+from utils.config import get_llm, get_embeddings
+from utils.tracking import TokenTracker
 from dotenv import load_dotenv
 import os
 import time

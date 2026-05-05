@@ -5,8 +5,8 @@ from langchain_classic.chains import create_retrieval_chain
 from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from rich.console import Console
-from src.utils.config import get_llm, get_embeddings
-from src.utils.tracking import TokenTracker
+from utils.config import get_llm, get_embeddings
+from utils.tracking import TokenTracker
 from dotenv import load_dotenv
 import os
 import time

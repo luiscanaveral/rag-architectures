@@ -4,8 +4,8 @@ from langchain_community.retrievers import BM25Retriever
 from langchain.schema import Document
 from langchain_classic.chains import RetrievalQA
 from rich.console import Console
-from src.utils.config import get_llm, get_embeddings
-from src.utils.tracking import TokenTracker
+from utils.config import get_llm, get_embeddings
+from utils.tracking import TokenTracker
 from dotenv import load_dotenv
 import os
 import time
