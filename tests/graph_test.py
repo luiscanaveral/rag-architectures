@@ -3,9 +3,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import streamlit as st
-from rag_architectures.conversational.app import run_conversational_rag
+from rag_architectures.graph.app import run_graph_rag
 
-st.title("Conversational RAG Chat")
+st.title("Graph RAG Chat")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -28,7 +28,7 @@ if prompt := st.chat_input("What is your question?"):
     
     with st.chat_message("assistant"):
         with st.spinner("Processing..."):
-            result = run_conversational_rag(prompt)
+            result = run_graph_rag(prompt)
             answer = result["answer"] if isinstance(result, dict) else result
             st.markdown(answer)
             

@@ -1,13 +1,13 @@
-import sqlite3
 import os
 from dotenv import load_dotenv
+import psycopg2
 
 load_dotenv()
 
-DB_PATH = os.getenv("SQLITE_DB_PATH", "./rag.db")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/rag")
 
 def query_users():
-    conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM users")
     results = cursor.fetchall()
@@ -15,7 +15,7 @@ def query_users():
     return results
 
 def query_orders(order_by="id"):
-    conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     cursor.execute(f"SELECT * FROM orders ORDER BY {order_by}")
     results = cursor.fetchall()

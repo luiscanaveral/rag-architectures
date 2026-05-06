@@ -1,47 +1,49 @@
-import sqlite3
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import DictCursor
 
 load_dotenv()
 
-DB_PATH = os.getenv("SQLITE_DB_PATH", "./rag.db")
+DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/rag")
 
 def init_db():
-    conn = sqlite3.connect(DB_PATH)
+    conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
-
+    
     # DDL
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
-
+    
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS orders (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
-        product TEXT NOT NULL,
-        amount REAL NOT NULL,
+        product VARCHAR(255) NOT NULL,
+        amount DECIMAL(10,2) NOT NULL,
         order_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        status TEXT DEFAULT 'pending',
+        status VARCHAR(50) DEFAULT 'pending',
         FOREIGN KEY (user_id) REFERENCES users(id)
     )
     """)
-
+    
     # Clear existing data
     cursor.execute("DELETE FROM orders")
     cursor.execute("DELETE FROM users")
-
+    conn.commit()
+    
     # Insert 100 users
     users = [(f"User {i}", f"user{i}@example.com") for i in range(1, 101)]
-    cursor.executemany("INSERT INTO users (name, email) VALUES (?, ?)", users)
+    cursor.executemany("INSERT INTO users (name, email) VALUES (%s, %s)", users)
     print(f"Inserted {len(users)} users")
-
+    
     # Insert 5 orders per user (total 500 orders)
     orders = []
     products = ["Laptop", "Smartphone", "Tablet", "Headphones", "Smartwatch", "Charger", "Case", "Screen Protector"]
@@ -53,12 +55,12 @@ def init_db():
             status = statuses[(user_id + order_num) % len(statuses)]
             orders.append((user_id, product, amount, status))
     
-    cursor.executemany("INSERT INTO orders (user_id, product, amount, status) VALUES (?, ?, ?, ?)", orders)
+    cursor.executemany("INSERT INTO orders (user_id, product, amount, status) VALUES (%s, %s, %s, %s)", orders)
     print(f"Inserted {len(orders)} orders")
-
+    
     conn.commit()
     conn.close()
-    print(f"Database initialized at {DB_PATH}")
+    print(f"Database initialized at {DB_URL}")
 
 if __name__ == "__main__":
     init_db()

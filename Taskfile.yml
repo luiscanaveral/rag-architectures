@@ -18,12 +18,17 @@ tasks:
       - '{{.PIP}} install -e ".[dev]"'
 
   db:
-    desc: Setup SQLite database with sample data
+    desc: Setup PostgreSQL database with sample data
     cmds:
       - '{{.PYTHON}} src/db/init_db.py'
 
   ingest:
-    desc: Ingest documents from data folder
+    desc: Ingest documents from data folder and database
+    cmds:
+      - '{{.PYTHON}} -m ingestion.ingest'
+
+  ingest-db:
+    desc: Re-ingest database content (users and orders)
     cmds:
       - '{{.PYTHON}} -m ingestion.ingest'
 
@@ -42,16 +47,16 @@ tasks:
       vars: [APP]
 
   query-users:
-    desc: Select all users from the database
+    desc: Select all users from PostgreSQL database
     cmds:
       - '{{.PYTHON}} src/db/query.py users'
 
   query-orders:
-    desc: Select all orders ordered by id
+    desc: Select all orders ordered by id from PostgreSQL
     cmds:
       - '{{.PYTHON}} src/db/query.py orders'
 
   query-all:
-    desc: Run both users and orders queries
+    desc: Run both users and orders queries from PostgreSQL
     cmds:
       - '{{.PYTHON}} src/db/query.py all'

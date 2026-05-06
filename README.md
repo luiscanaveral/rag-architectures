@@ -97,7 +97,7 @@ Starts ChromaDB (port 8000) and Redis (port 6379).
 task db
 ```
 
-Creates SQLite database with 100 users and 500 orders.
+Creates PostgreSQL database with 100 users and 500 orders.
 
 ### 5. Add Documents
 
