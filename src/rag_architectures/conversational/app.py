@@ -7,6 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from rich.console import Console
 from utils.config import get_llm, get_embeddings
 from utils.tracking import TokenTracker
+from utils.semantic_cache import SemanticCache
 from dotenv import load_dotenv
 import os
 import time
@@ -14,7 +15,16 @@ import time
 load_dotenv()
 console = Console()
 
+semantic_cache = SemanticCache(embedding_func=get_embeddings())
+
 def run_conversational_rag(query: str):
+    cached = semantic_cache.lookup(query)
+    if cached:
+        console.print("[bold yellow]Cache HIT[/bold yellow]")
+        console.print(f"\n[bold blue]Query:[/bold blue] {query}")
+        console.print(f"[bold green]Answer:[/bold green] {cached}")
+        return {"answer": cached, "metadata": {"cached": True}}
+
     tracker = TokenTracker()
     start_time = time.time()
     
@@ -29,7 +39,6 @@ def run_conversational_rag(query: str):
         ("human", "{input}"),
     ])
     
-    # Add context variable to prompt
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are a helpful assistant. Use the context to answer questions.\nContext: {context}"),
         ("human", "{input}"),
@@ -54,6 +63,8 @@ def run_conversational_rag(query: str):
     
     tracker.process_time = time.time() - start_time
     tracker.update_from_response()
+
+    semantic_cache.store(query, result["answer"])
     
     console.print(f"\n[bold blue]Query:[/bold blue] {query}")
     console.print(f"[bold green]Answer:[/bold green] {result['answer']}")
