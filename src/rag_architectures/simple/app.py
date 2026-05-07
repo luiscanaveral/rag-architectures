@@ -1,12 +1,9 @@
-from langchain_community.vectorstores import Chroma
 from langchain_classic.chains import RetrievalQA
-from langchain_core.callbacks import StdOutCallbackHandler
 from rich.console import Console
-from utils.config import get_llm, get_embeddings
+from utils.config import get_llm, get_vectorstore
 from utils.tracking import TokenTracker
 from utils.langfuse_tracing import LangfuseRestCallback
 from dotenv import load_dotenv
-import os
 import time
 
 load_dotenv()
@@ -18,9 +15,7 @@ def run_simple_rag(query: str):
     tracker = TokenTracker()
     start_time = time.time()
     
-    embeddings = get_embeddings()
-    vectordb = Chroma(persist_directory=os.getenv("VECTOR_STORE_PATH"), embedding_function=embeddings)
-    
+    vectordb = get_vectorstore()
     llm = get_llm()
     qa_chain = RetrievalQA.from_chain_type(llm, retriever=vectordb.as_retriever())
     

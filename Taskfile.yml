@@ -48,7 +48,7 @@ tasks:
   streamlit:
     desc: Run streamlit test app
     cmds:
-      - '{{.VENV}}/bin/streamlit run tests/{{.APP}}.py'
+      - '{{.VENV}}/bin/streamlit run src/test_apps/{{.APP}}.py'
     requires:
       vars: [APP]
 
@@ -67,6 +67,11 @@ tasks:
     cmds:
       - '{{.PYTHON}} src/db/query.py all'
 
+  chroma-viewer:
+    desc: Start ChromaDB viewer at http://localhost:8501
+    cmds:
+      - '{{.VENV}}/bin/streamlit run src/tools/chroma_viewer.py'
+
   langfuse-keys:
     desc: Create Langfuse API keys in PostgreSQL and update .env
     cmds:
@@ -79,3 +84,4 @@ tasks:
       - rm -rf .local/chroma_data .local/langfuse_data .local/vectorstore
       - docker compose up -d
       - task: langfuse-keys
+      - task: feed-all

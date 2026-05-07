@@ -1,6 +1,8 @@
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_community.vectorstores import Chroma
 from dotenv import load_dotenv
+import chromadb
 import os
 
 load_dotenv()
@@ -29,6 +31,22 @@ def get_embeddings():
         return OpenAIEmbeddings(
             model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
         )
+
+def get_vectorstore():
+    embeddings = get_embeddings()
+    host = os.getenv("CHROMA_SERVER_HOST", "localhost")
+    port = int(os.getenv("CHROMA_SERVER_PORT", "8000"))
+    collection = os.getenv("CHROMA_COLLECTION", "rag_collection")
+    client = chromadb.HttpClient(host=host, port=port)
+    return Chroma(client=client, collection_name=collection, embedding_function=embeddings)
+
+def create_vectorstore(documents):
+    embeddings = get_embeddings()
+    host = os.getenv("CHROMA_SERVER_HOST", "localhost")
+    port = int(os.getenv("CHROMA_SERVER_PORT", "8000"))
+    collection = os.getenv("CHROMA_COLLECTION", "rag_collection")
+    client = chromadb.HttpClient(host=host, port=port)
+    return Chroma.from_documents(documents, embeddings, client=client, collection_name=collection)
 
 def print_config():
     from rich.console import Console

@@ -9,9 +9,8 @@ sys.path.insert(0, str(project_root))
 
 from docling.document_converter import DocumentConverter
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import Chroma
 from langchain_core.documents import Document
-from src.utils.config import get_embeddings
+from src.utils.config import create_vectorstore
 from dotenv import load_dotenv
 import whisper
 import os
@@ -21,7 +20,6 @@ from pathlib import Path
 load_dotenv()
 
 DATA_PATH = os.getenv("DATA_PATH", "./data")
-VECTOR_STORE_PATH = os.getenv("VECTOR_STORE_PATH", ".local/vectorstore")
 DB_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/rag")
 
 def transcribe_video(video_path):
@@ -54,8 +52,6 @@ def ingest_documents():
     doc_converter = DocumentConverter()
 
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    embeddings = get_embeddings()
-
     docs = []
     data_dir = Path(DATA_PATH).resolve()  # Get absolute path
     document_extensions = {'.pdf', '.docx', '.pptx', '.html', '.md', '.csv', '.xlsx', '.txt'}
@@ -117,8 +113,8 @@ def ingest_documents():
     
     print(f"Total chunks: {len(docs)}")
     documents = [Document(page_content=chunk) for chunk in docs]
-    vectordb = Chroma.from_documents(documents, embeddings, persist_directory=VECTOR_STORE_PATH)
-    print(f"Documents ingested to {VECTOR_STORE_PATH}")
+    vectordb = create_vectorstore(documents)
+    print(f"Ingested to Chroma server at {os.getenv('CHROMA_SERVER_HOST', 'localhost')}:{os.getenv('CHROMA_SERVER_PORT', '8000')}")
 
 if __name__ == "__main__":
     ingest_documents()

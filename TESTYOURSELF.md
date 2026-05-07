@@ -197,6 +197,29 @@ task streamlit APP=conversational_test
 
 ---
 
+## 9. Video & Media (`universal - applies to all architectures`)
+
+**Description**: Questions that test video/audio transcription ingestion via Whisper. Two media files are ingested: `video.mp4` and `VID20240326154634.mp4`.
+
+### Sample Questions & Answers
+
+**Q1**: What is the video data directory?
+**Expected Answer**: `/Users/lcanaveral/Desktop/PoC/ai/rag-architectures/data` contains the media files
+
+**Q2**: How many video files were ingested?
+**Expected Answer**: 2 — `video.mp4` and `VID20240326154634.mp4`
+
+**Q3**: Summarize the content of the transcribed videos
+**Expected Answer**: Should retrieve and summarize text from the Whisper transcription chunks stored in vectorstore
+
+**Q4**: List any technical terms or names mentioned in the video transcriptions
+**Expected Answer**: Should extract key entities from the transcribed speech content
+
+**Q5**: Compare the volume of content from video transcripts vs PDF documents
+**Expected Answer**: Should note that shorter media files produce fewer chunks (1 chunk each for videos) compared to the PDF (10 chunks)
+
+---
+
 ## Metadata Verification
 
 Each response should include metadata:
