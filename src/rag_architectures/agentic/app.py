@@ -73,7 +73,7 @@ def run_agentic_rag(query: str):
     
     return {
         "answer": result['messages'][-1].content,
-        "metadata": tracker.get_metadata()
+        "metadata": {**tracker.get_metadata(), "cached": False}
     }
 
 if __name__ == "__main__":

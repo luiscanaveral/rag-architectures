@@ -64,7 +64,7 @@ def run_corrective_rag(query: str):
     
     return {
         "answer": result['result'],
-        "metadata": tracker.get_metadata()
+        "metadata": {**tracker.get_metadata(), "cached": False}
     }
 
 if __name__ == "__main__":

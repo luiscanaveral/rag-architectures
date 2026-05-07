@@ -72,7 +72,7 @@ def run_conversational_rag(query: str):
     
     return {
         "answer": result['answer'],
-        "metadata": tracker.get_metadata()
+        "metadata": {**tracker.get_metadata(), "cached": False}
     }
 
 if __name__ == "__main__":

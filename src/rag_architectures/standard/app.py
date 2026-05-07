@@ -51,7 +51,7 @@ def run_standard_rag(query: str, k: int = 4):
     
     return {
         "answer": result['result'],
-        "metadata": tracker.get_metadata()
+        "metadata": {**tracker.get_metadata(), "cached": False}
     }
 
 if __name__ == "__main__":

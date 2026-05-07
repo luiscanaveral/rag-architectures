@@ -220,6 +220,29 @@ task streamlit APP=conversational_test
 
 ---
 
+## 10. Semantic Cache (`all architectures`)
+
+**Description**: Redis-backed semantic cache stores query embeddings + LLM responses. Subsequent queries with cosine similarity ≥ 0.90 skip the LLM and return the cached answer.
+
+### Sample Questions & Answers
+
+**Q1**: Run the same query twice — what changes?
+**Expected Behavior**: First call = CACHE MISS (full processing, tokens logged). Second call = CACHE HIT (instant, no tokens, `"cached": true` in metadata)
+
+**Q2**: Ask a rephrased question (e.g., "What is the capital?" → "Tell me the capital city")
+**Expected Behavior**: If semantically similar (cosine ≥ 0.90), returns cached response as CACHE HIT
+
+**Q3**: Ask a completely different question
+**Expected Behavior**: CACHE MISS — new embedding stored, no match found
+
+**Q4**: Clear the cache with `semantic_cache.clear()` and repeat Q1
+**Expected Behavior**: Previously cached query now returns CACHE MISS (cache evicted)
+
+**Q5**: What happens to tokens/process_time on a HIT vs MISS?
+**Expected Behavior**: HIT shows `"cached": true` with no token counts and ~0s process time; MISS shows full token usage and `"cached": false`
+
+---
+
 ## Metadata Verification
 
 Each response should include metadata:
@@ -228,7 +251,8 @@ Each response should include metadata:
   "prompt_tokens": <number>,
   "completion_tokens": <number>,
   "total_tokens": <number>,
-  "process_time": <seconds>
+  "process_time": <seconds>,
+  "cached": <boolean>
 }
 ```
 
@@ -236,6 +260,7 @@ Each response should include metadata:
 - Simple questions: 150-250 prompt, 30-60 completion
 - Complex questions: 800-1000 prompt, 100-250 completion
 - Process time: 2-10 seconds (depending on LLM)
+- Cache HIT: no token data, `"cached": true`, process_time ~0s
 
 ---
 
