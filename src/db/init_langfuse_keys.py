@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import time
 import uuid
 import secrets
 import bcrypt
@@ -8,16 +9,20 @@ DB_URL = "postgresql://postgres:postgres@localhost:5432/rag"
 ENV_PATH = ".env"
 
 def get_project_id():
-    res = subprocess.run(
-        ["docker", "compose", "exec", "langfuse-db", "psql", "-U", "postgres", "-d", "rag", "-t", "-A",
-         "-c", "SELECT id FROM projects LIMIT 1"],
-        capture_output=True, text=True, timeout=10
-    )
-    pid = res.stdout.strip()
-    if not pid:
-        print("No project found in Langfuse DB. Have you started the containers?")
-        sys.exit(1)
-    return pid
+    for attempt in range(30):
+        res = subprocess.run(
+            ["docker", "compose", "exec", "langfuse-db", "psql", "-U", "postgres", "-d", "rag", "-t", "-A",
+             "-c", "SELECT id FROM projects LIMIT 1"],
+            capture_output=True, text=True, timeout=10
+        )
+        pid = res.stdout.strip()
+        if pid:
+            return pid
+        if attempt == 0:
+            print("Waiting for Langfuse project to be created...")
+        time.sleep(2)
+    print("No project found in Langfuse DB after 60s.")
+    sys.exit(1)
 
 def key_exists(project_id):
     res = subprocess.run(
