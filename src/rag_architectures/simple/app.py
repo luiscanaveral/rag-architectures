@@ -4,12 +4,15 @@ from langchain_core.callbacks import StdOutCallbackHandler
 from rich.console import Console
 from utils.config import get_llm, get_embeddings
 from utils.tracking import TokenTracker
+from utils.langfuse_tracing import LangfuseRestCallback
 from dotenv import load_dotenv
 import os
 import time
 
 load_dotenv()
 console = Console()
+
+langfuse_handler = LangfuseRestCallback()
 
 def run_simple_rag(query: str):
     tracker = TokenTracker()
@@ -22,19 +25,13 @@ def run_simple_rag(query: str):
     qa_chain = RetrievalQA.from_chain_type(llm, retriever=vectordb.as_retriever())
     
     with console.status("[bold green]Processing..."):
-        result = qa_chain.invoke(query, config={"callbacks": [tracker.callback]})
+        result = qa_chain.invoke(query, config={"callbacks": [tracker.callback, langfuse_handler]})
     
     # Calculate process time after invocation
     tracker.process_time = time.time() - start_time
     
     # Update token counts from the callback
     tracker.update_from_response()
-    
-    # Also try to get tokens from the LLM response if available
-    if 'result' in result:
-        # The chain might not expose token usage directly
-        # We'll rely on the callback to capture tokens
-        pass
     
     tracker.log()
     

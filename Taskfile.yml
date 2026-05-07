@@ -32,6 +32,12 @@ tasks:
     cmds:
       - '{{.PYTHON}} -m ingestion.ingest'
 
+  feed-all:
+    desc: Run full pipeline - DB init + ingestion
+    cmds:
+      - task: db
+      - task: ingest
+
   run:
     desc: Run a specific RAG architecture
     cmds:
@@ -60,3 +66,16 @@ tasks:
     desc: Run both users and orders queries from PostgreSQL
     cmds:
       - '{{.PYTHON}} src/db/query.py all'
+
+  langfuse-keys:
+    desc: Create Langfuse API keys in PostgreSQL and update .env
+    cmds:
+      - '{{.PYTHON}} src/db/init_langfuse_keys.py'
+
+  clean-start:
+    desc: Clean and restart Docker Compose (removes volumes, orphans)
+    cmds:
+      - docker compose down -v --remove-orphans
+      - rm -rf .local/chroma_data .local/langfuse_data .local/vectorstore
+      - docker compose up -d
+      - task: langfuse-keys

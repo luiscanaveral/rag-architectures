@@ -12,9 +12,12 @@ def init_db():
     conn = psycopg2.connect(DB_URL)
     cursor = conn.cursor()
     
-    # DDL
+    # DDL - Drop tables first to avoid sequence issues
+    cursor.execute("DROP TABLE IF EXISTS orders CASCADE")
+    cursor.execute("DROP TABLE IF EXISTS users CASCADE")
+    
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE users (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -23,7 +26,7 @@ def init_db():
     """)
     
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         product VARCHAR(255) NOT NULL,
@@ -34,9 +37,6 @@ def init_db():
     )
     """)
     
-    # Clear existing data
-    cursor.execute("DELETE FROM orders")
-    cursor.execute("DELETE FROM users")
     conn.commit()
     
     # Insert 100 users
