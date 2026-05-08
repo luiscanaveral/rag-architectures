@@ -87,6 +87,11 @@ tasks:
     cmds:
       - '{{.PYTHON}} -m eval.runner --arch {{.CLI_ARGS}}'
 
+  eval-report:
+    desc: Show latest evaluation report
+    cmds:
+      - '{{.PYTHON}} src/eval/report.py'
+
   clean-start:
     desc: Clean and restart Docker Compose (removes volumes, orphans)
     cmds:

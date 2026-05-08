@@ -1,5 +1,8 @@
 import os
 import sys
+import json
+import time as time_module
+from datetime import datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -24,6 +27,18 @@ from deepeval.models import OllamaModel
 from langchain_openai import ChatOpenAI
 
 console = Console()
+REPORT_DIR = Path(".logs/reports")
+
+
+def _make_report_path() -> Path:
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+    return REPORT_DIR / f"eval.{ts}.log"
+
+
+def _append_report(report_path: Path, entry: dict):
+    with open(report_path, "a") as f:
+        f.write(json.dumps(entry, default=str) + "\n")
 
 
 def _make_judge():
@@ -35,12 +50,12 @@ def _make_judge():
     model_name = os.getenv("LLM_MODEL", "gpt-4o-mini")
     return ChatOpenAI(model=model_name)
 
+
 ARCHITECTURES: dict[str, callable] = {}
 
 
 def _register_all():
     from rag_architectures.simple.app import run_simple_rag
-
     ARCHITECTURES["simple"] = run_simple_rag
 
     for mod_name, fn_name, label in [
@@ -53,7 +68,6 @@ def _register_all():
         ("rag_architectures.graph.app", "run_graph_rag", "graph"),
     ]:
         import importlib
-
         mod = importlib.import_module(mod_name)
         ARCHITECTURES[label] = getattr(mod, fn_name)
 
@@ -65,6 +79,7 @@ def eval_architectures(
 ):
     _register_all()
 
+    report_path = _make_report_path()
     judge = _make_judge()
 
     faithfulness = FaithfulnessMetric(model=judge, threshold=0.5)
@@ -75,6 +90,8 @@ def eval_architectures(
     cases = [tc for tc in SINGLE_TURN_TEST_CASES if test_names is None or tc["name"] in test_names]
 
     vectordb = get_vectorstore()
+
+    summary: dict[str, dict[str, list[float]]] = {}
 
     for arch in targets:
         SemanticCache(embedding_func=get_embeddings()).clear()
@@ -104,27 +121,66 @@ def eval_architectures(
             table.add_column("Threshold", style="yellow")
             table.add_column("Pass", style="bold")
 
+            entries: list[dict] = []
+
             for metric in [faithfulness, answer_relevancy, contextual_precision]:
+                label = metric.__class__.__name__.replace("Metric", "")
                 try:
                     metric.measure(test_case)
                     passed = metric.is_successful()
                     score = metric.score
                     table.add_row(
-                        metric.__class__.__name__.replace("Metric", ""),
+                        label,
                         f"{score:.3f}",
                         f"{metric.threshold}",
                         "[green]PASS[/green]" if passed else "[red]FAIL[/red]",
                     )
+                    entries.append({"metric": label, "score": score, "threshold": metric.threshold, "passed": passed})
                 except Exception as e:
-                    table.add_row(
-                        metric.__class__.__name__.replace("Metric", ""),
-                        "ERROR",
-                        f"{metric.threshold}",
-                        f"[red]{e!s}[/red]",
-                    )
+                    table.add_row(label, "ERROR", f"{metric.threshold}", f"[red]{e!s}[/red]")
+                    entries.append({"metric": label, "score": None, "threshold": metric.threshold, "passed": False, "error": str(e)})
 
             console.print(table)
             console.print()
+
+            _append_report(report_path, {
+                "timestamp": datetime.now().isoformat(),
+                "architecture": arch,
+                "test_case": name,
+                "query": query,
+                "expected_output": expected,
+                "actual_output": actual_output,
+                "metrics": {e["metric"]: {"score": e["score"], "passed": e["passed"]} for e in entries},
+            })
+
+            summary.setdefault(arch, {}).setdefault("all", [])
+            for e in entries:
+                summary.setdefault(arch, {}).setdefault(e["metric"], [])
+                if e["score"] is not None:
+                    summary[arch][e["metric"]].append(e["score"])
+                    summary[arch]["all"].append(e["score"])
+
+    # Summary
+    console.rule("[bold yellow]SUMMARY")
+    console.print(f"Report saved to: [cyan]{report_path}[/cyan]\n")
+
+    summary_table = Table(title="Average Scores per Architecture", show_header=True)
+    summary_table.add_column("Architecture", style="cyan")
+    summary_table.add_column("Avg Score", style="green")
+    summary_table.add_column("Avg Faithfulness", style="green")
+    summary_table.add_column("Avg AnswerRelevancy", style="green")
+    summary_table.add_column("Avg ContextualPrecision", style="green")
+
+    for arch in targets:
+        s = summary[arch]
+        avg_all = sum(s["all"]) / len(s["all"]) if s["all"] else 0
+        avg_f = sum(s["Faithfulness"]) / len(s["Faithfulness"]) if s.get("Faithfulness") else 0
+        avg_a = sum(s["AnswerRelevancy"]) / len(s["AnswerRelevancy"]) if s.get("AnswerRelevancy") else 0
+        avg_c = sum(s["ContextualPrecision"]) / len(s["ContextualPrecision"]) if s.get("ContextualPrecision") else 0
+        summary_table.add_row(arch, f"{avg_all:.3f}", f"{avg_f:.3f}", f"{avg_a:.3f}", f"{avg_c:.3f}")
+
+    console.print(summary_table)
+    console.print()
 
 
 if __name__ == "__main__":

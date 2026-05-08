@@ -26,6 +26,10 @@ rag.db
 *.swp
 *.swo
 
+# Python packages
+*.egg-info/
+*.egg
+
 # Testing
 .pytest_cache/
 .coverage
@@ -33,3 +37,7 @@ htmlcov/
 
 # Misc
 .DS_Store
+index_files/
+index.html
+.logs/
+.local/
