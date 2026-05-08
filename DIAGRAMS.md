@@ -4,107 +4,176 @@
 
 ```mermaid
 graph LR
-    A[User Query] --> B[Vector Search]
-    C[Document Store] --> B
-    B --> D[Retrieved Context]
-    D --> E[LLM]
-    E --> F[Generated Answer]
+    A[User Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Vector Search]
+    E[Chroma Server] --> D
+    D --> F[Retrieved Context]
+    F --> G[LLM]
+    G --> H[Generated Answer]
+    H --> I[Store in Cache]
 ```
 
 ## 2. Conversational RAG
 
 ```mermaid
 graph LR
-    A[User Query] --> B[Chat History]
-    B --> C[Context + Query]
-    C --> D[Vector Search]
-    E[Document Store] --> D
-    D --> F[Retrieved Context]
-    F --> G[LLM with History]
-    G --> H[Answer]
-    H --> B
+    A[User Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Chat History]
+    D --> E[Context + Query]
+    E --> F[Vector Search]
+    G[Chroma Server] --> F
+    F --> H[Retrieved Context]
+    H --> I[LLM with History]
+    I --> J[Answer]
+    J --> K[Store in Cache]
+    J --> D
 ```
 
 ## 3. Standard RAG
 
 ```mermaid
 graph TD
-    A[User Query] --> B[Embed Query]
-    B --> C[Similarity Search]
-    D[Vector Store] --> C
-    C --> E[Top K Documents]
-    E --> F[Context Assembly]
-    F --> G[LLM Prompt]
-    G --> H[Answer with Sources]
+    A[User Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Embed Query]
+    D --> E[Similarity Search]
+    F[Chroma Server] --> E
+    E --> G[Top K Documents]
+    G --> H[Context Assembly]
+    H --> I[LLM Prompt]
+    I --> J[Answer with Sources]
+    J --> K[Store in Cache]
 ```
 
 ## 4. Corrective RAG
 
 ```mermaid
 graph TD
-    A[Query] --> B[Retrieve Documents]
-    B --> C{Validate Docs}
-    C -->|Relevant| D[Generate Answer]
-    C -->|Not Relevant| E[Web Search]
-    E --> D
-    C -->|Uncertain| F[Refine Query]
-    F --> B
-    D --> G[Answer]
+    A[Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Retrieve Documents]
+    D --> E{Validate Docs}
+    E -->|Relevant| F[Generate Answer]
+    E -->|Not Relevant| G[Web Search]
+    G --> F
+    E -->|Uncertain| H[Refine Query]
+    H --> D
+    F --> I[Answer]
+    I --> J[Store in Cache]
 ```
 
 ## 5. Fusion RAG
 
 ```mermaid
 graph TD
-    A[Query] --> B[Vector Search]
-    A --> C[BM25 Keyword Search]
-    B --> D[Ensemble Retriever]
-    C --> D
-    D --> E[Fused Results]
-    E --> F[LLM]
-    F --> G[Answer]
+    A[Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Vector Search]
+    A --> E[BM25 Keyword Search]
+    D --> F[Ensemble Retriever]
+    E --> F
+    F --> G[Fused Results]
+    G --> H[LLM]
+    H --> I[Answer]
+    I --> J[Store in Cache]
 ```
 
 ## 6. Contextual RAG
 
 ```mermaid
 graph TD
-    A[Query] --> B[Retrieve Context]
-    B --> C[Context Window]
-    D[Document Metadata] --> C
-    C --> E[Context-Aware Prompt]
-    E --> F[LLM]
-    F --> G[Contextual Answer]
+    A[Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Retrieve Context]
+    D --> E[Context Window]
+    F[Document Metadata] --> E
+    E --> G[Context-Aware Prompt]
+    G --> H[LLM]
+    H --> I[Contextual Answer]
+    I --> J[Store in Cache]
 ```
 
 ## 7. Agentic RAG
 
 ```mermaid
 graph TD
-    A[User Query] --> B[Agent Planner]
-    B --> C{Decision}
-    C -->|Vector Search| D[Retrieve Docs]
-    C -->|Web Search| E[Search API]
-    C -->|SQL Query| F[Query Database]
-    D --> G[Synthesize]
-    E --> G
-    F --> G
-    G --> H{Need More?}
-    H -->|Yes| B
-    H -->|No| I[Final Answer]
+    A[User Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Agent Planner]
+    D --> E{Decision}
+    E -->|Vector Search| F[Retrieve Docs]
+    E -->|Web Search| G[Search API]
+    E -->|SQL Query| H[Query Database]
+    F --> I[Synthesize]
+    G --> I
+    H --> I
+    I --> J{Need More?}
+    J -->|Yes| D
+    J -->|No| K[Final Answer]
+    K --> L[Store in Cache]
 ```
 
 ## 8. Graph RAG
 
 ```mermaid
 graph TD
-    A[Query] --> B[Extract Entities]
-    B --> C[Graph Traversal]
-    D[Knowledge Graph] --> C
-    C --> E[Relationship Paths]
-    E --> F[Path Ranking]
-    F --> G[LLM with Graph Context]
-    G --> H[Explainable Answer]
+    A[Query] --> B{Semantic Cache}
+    B -->|HIT| C[Return Cached]
+    B -->|MISS| D[Extract Entities]
+    D --> E[Graph Traversal]
+    F[Knowledge Graph] --> E
+    E --> G[Relationship Paths]
+    G --> H[Path Ranking]
+    H --> I[LLM with Graph Context]
+    I --> J[Explainable Answer]
+    J --> K[Store in Cache]
+```
+
+## 9. Semantic Cache — Cross-Cutting
+
+```mermaid
+graph TD
+    A[Query] --> B[Embed Query]
+    B --> C[Redis: cosine similarity]
+    C --> D{Score >= 0.90?}
+    D -->|Yes| E[Return Cached Response]
+    D -->|No| F[Run RAG Pipeline]
+    F --> G[Store Embedding + Response]
+    G --> H[Return Fresh Response]
+```
+
+## 10. Evaluation Pipeline (DeepEval)
+
+```mermaid
+graph LR
+    A[Test Dataset] --> B[Run RAG Pipeline]
+    C[Chroma: retrieve context] --> B
+    B --> D[actual_output]
+    D --> E[DeepEval Metrics]
+    F[Judge LLM] --> E
+    E --> G[Faithfulness]
+    E --> H[Answer Relevancy]
+    E --> I[Contextual Precision]
+    G --> J[Report]
+    H --> J
+    I --> J
+```
+
+## Infrastructure
+
+```mermaid
+graph TD
+    A[User] --> B[Streamlit Viewer :8501]
+    A --> C[RAG Apps :CLI]
+    A --> D[Langfuse UI :4000]
+    C --> E[Chroma Server :8000]
+    C --> F[Redis Cache :6379]
+    C --> G[LLM: Ollama/OpenAI]
+    E --> H[Chroma SQLite]
+    F --> I[Semantic Embeddings]
+    D --> J[PostgreSQL :5432]
 ```
 
 ## Comparison Summary
